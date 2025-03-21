@@ -1,0 +1,12 @@
+DROP FUNCTION IF EXISTS create_team;
+DROP FUNCTION IF EXISTS get_team_by_id;
+DROP FUNCTION IF EXISTS get_teams;
+DROP FUNCTION IF EXISTS update_team;
+DROP FUNCTION IF EXISTS delete_team;
+
+DROP FUNCTION IF EXISTS add_user_to_team;
+DROP FUNCTION IF EXISTS remove_user_from_team;
+
+DROP TABLE IF EXISTS teams;
+
+DROP TYPE IF EXISTS team_type;

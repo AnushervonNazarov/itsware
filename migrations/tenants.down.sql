@@ -1,0 +1,9 @@
+DROP FUNCTION IF EXISTS create_tenant;
+DROP FUNCTION IF EXISTS get_tenant_by_id;
+DROP FUNCTION IF EXISTS get_tenants;
+DROP FUNCTION IF EXISTS update_tenant;
+DROP FUNCTION IF EXISTS delete_tenant;
+
+DROP TABLE IF EXISTS tenants;
+
+DROP TYPE IF EXISTS tenant_type;

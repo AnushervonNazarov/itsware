@@ -1,0 +1,9 @@
+DROP FUNCTION IF EXISTS create_device;
+DROP FUNCTION IF EXISTS get_device_by_id;
+DROP FUNCTION IF EXISTS get_devices;
+DROP FUNCTION IF EXISTS update_device;
+DROP FUNCTION IF EXISTS delete_device;
+
+DROP TABLE IF EXISTS devices;
+
+DROP TYPE IF EXISTS device_type;

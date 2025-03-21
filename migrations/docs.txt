@@ -1,0 +1,593 @@
+- Description
+- Input
+- Output
+- Permissions
+- Logic
+- Unit test
+
+1 - CRUD tenants
+2 - CRUD users
+3 - CRUD teams
+4 - CRUD cabinets
+5 - CRUD device_profiles
+6 - CRUD devices
+
+Function tenants.create:
+    Description: Creates a tenant
+    Input: p_tenant tenants.tenant
+    Output: tenants.tenant
+    Permission: Only support_admins
+    Logic: 
+        1. check user role support_admin, if not raise exception 'permission denied'
+        2. insert new tenant
+        3. return the tenant
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT tenants.create(ROW(NULL, 'Tenant Name', TRUE, NULL, NULL)::tenants.tenant);
+
+Function tenants.get_one:
+    Description: Gets one tenant
+    Input:  p_tenant_id tenants.tenant
+    Output: tenants.tenant
+    Permissions: support_admin or support_view or administrator in the same tenant
+    Logic:
+        1. check user role support_admin or support_view or administrator in the same tenant, if not raise exception 'permission denied'
+        2. select tenant into new variable
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT tenants.get_one(1);
+
+    SET tenant_id = 2;
+    SELECT tenants.get_one(1);
+
+
+Function tenants.get_all:
+    Description: Gets all tenants
+    Input:
+    Output: tenants.tenant
+    Permissions: support_admin or support_view or administrator
+    Logic:
+        1. check user role if administrator return all tenants belong to administrator or support_admin or support_view, if not raise exception 'permission denied'
+        2. return tenant
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT tenants.get_all();
+
+Function tenants.update:
+    Description: Updates a tenant
+    Input: p_tenant tenants.tenant
+    Output: tenants.tenant
+    Permissions: Only support_admin
+    Logic:
+        1. check user role support_admin, if not raise exception 'permission denied'
+        2. update tenant
+        3. return updated tenant
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT tenants.update(ROW(1, 'Updated', NULL, NULL, NULL)::tenants.tenant);
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';  
+    SELECT tenants.update(ROW(2, 'Updated', NULL, NULL, NULL)::tenants.tenant);
+
+Function tenants.delete:
+    Description: Deletes a tenant
+    Input: p_tenant_id INT
+    Output:
+    Permissions: Only support_admin
+    Logic:
+        1. check user role support_admin, if not raise exception 'permission denied'
+        2. delete tenant
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT tenants.delete(1);
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';  
+    SELECT tenants.delete(2);
+
+
+Function users.create:
+    Description: Creates a user
+    Input: p_user_input users."user"
+    Output: users."user"
+    Permissions: support_admin or administrator in the same tenant
+    Logic:
+        1. check user role support_admin or administrator in the same tenant as the user, if not raise exception 'permission denied'
+        2. insert new user
+        3. return the user
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT users.create(ROW(NULL, 'First Name', 'Last Name', 'test@itsware.com', '123456789', 1, 1, NULL, NULL, NULL, NULL)::users.user);
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';  
+    SELECT users.create(ROW(NULL, 'First Name', 'Last Name', 'test@itsware.com', '123456789', 1, 2, NULL, NULL, NULL, NULL)::users.user);
+
+
+Function users.get_one:
+    Description: Gets one user
+    Input: p_user_id INT
+    Output: users."user"
+    Permissions: user himself or administrator in the same tenant as the user or support_view or support_admin
+    Logic:
+        1. check user himself or user role support_admin, support_view or administrator in the same tenant as the user, if not raise exception 'permission denied'
+        2. select user into new variable
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT users.get_one(1);
+
+    SET myapp.session.user_role = 'support_view';
+    SELECT users.get_one(1);
+
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT users.get_one(2);
+
+    SET myapp.session.tenant_id = 3;
+    SELECT users.get_one(3);
+
+
+Function users.get_all:
+    Description: Gets all users
+    Input:
+    Output: users."user"
+    Permissions: support_view or support_admin or administrator in the same tenant as the user or user himself
+    Logic:
+        1. check user himself or user role support_admin, support_view or administrator in the same tenant as the user, if not raise exception 'permission denied'
+        2. select user according to role
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT users.get_all();
+
+    SET myapp.session.user_role = 'support_view';
+    SELECT users.get_all();
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT users.get_one();
+
+
+Function users.update:
+    Description: Updates a user
+    Input: p_user_input users."user"
+    Output: users."user"
+    Permissions: support_admin or administrator in the same tenant as the user
+    Logic:
+        1. check user role support_admin or administrator in the same tenant as the user, if not raise exception 'permission denied'
+        2. update user
+        3. return updated user
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT users.update(ROW(1, 'Updated First Name', 'Updated Last Name', 'updated@itsware.com', '987654321', 2, NULL, NULL, NULL, NULL, NULL)::users.user);
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT users.update(ROW(2, 'Updated First Name', 'Updated Last Name', 'updated@itsware.com', '987654321', 2, NULL, NULL, NULL, NULL, NULL)::users.user);
+
+
+Function users.delete:
+    Description: Deletes a user
+    Input: p_user_id INT
+    Output: 
+    Permissions: support_admin or administrator in the same tenant as the user
+    Logic:
+        1. check user role support_admin or administrator in the same tenant as the user, if not raise exception 'permission denied'
+        2. delete user
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT users.delete(1);
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT users.delete(2);
+
+Function add_user_to_team:
+    Description: Adds user to team
+    Input: input team_user
+    Output: team_user
+    Permissions: support_admin or administrator in the same tenant as the user
+    Logic:
+        1. check user role support_admin or administrator in the same tenant, if not raise exception 'permission denied'
+        2. insert new team_user
+        3. return new_team_users
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT add_user_to_team(ROW(1, 1, NULL, 1, NULL, NULL)::team_user);
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT add_user_to_team(ROW(2, 2, NULL, 2, NULL, NULL)::team_user);
+
+    
+Function remove_user_from_team:
+    Description: Removes user from team
+    Input: p_user_id INT, p_team_id INT
+    Output:
+    Permissions: support_admin or administrator in the same tenant as the user
+    Logic:
+        1. check user role support_admin or administrator in the same tenant, if not raise exception 'permission denied'
+        2. remove user from team
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT remove_user_from_team(1,1);
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT remove_user_from_team(2,2);
+
+Function teams.create:
+    Description: Creates a team
+    Input: p_team teams.team
+    Output: teams.team
+    Permissions: support_admin or administrator in the same tenant as the user
+    Logic:
+        1. check user role support_admin or administrator in the same tenant, if not raise exception 'permission denied'
+        2. insert new team
+        3. return the team
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT teams.create(ROW(NULL, 'Team Name', 1, NULL, NULL, NULL, NULL)::teams.team);
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT teams.create(ROW(NULL, 'Team Name', 2, NULL, NULL, NULL, NULL)::teams.team);
+
+
+Function teams.get_one:
+    Description: Gets one team
+    Input: p_team_id INT
+    Output: teams.team
+    Permissions: support_view or support_admin or administrator in the same tenant
+    Logic:
+        1. check user role support_admin, support_view or administrator in the same tenant, if not raise exception 'permission denied'
+        2. select team into new variable
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT teams.get_one(1);
+
+    SET myapp.session.user_role = 'support_view';
+    SELECT teams.get_one(1);
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT teams.get_one(2);
+
+Function teams.get_all:
+    Description: Gets all teams
+    Input:
+    Output: teams.team
+    Permissions: support_view or support_admin or administrator in the same tenant
+    Logic:
+        1. check user role support_admin, support_view or administrator in the same tenant, if not raise exception 'permission denied'
+        2. return teams according to role
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT teams.get_all();
+
+    SET myapp.session.user_role = 'support_view';
+    SELECT teams.get_all();
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT teams.get_all();
+
+Function teams.update:
+    Description: Updates a team
+    Input: p_team teams.team
+    Output: teams.team
+    Permissions: support_admin or administrator in the same tenant
+    Logic:
+        1. check user role support_admin or administrator in the same tenant, if not raise exception 'permission denied'
+        2. update team
+        3. return updated team
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT teams.update(ROW(1, 'Updated', NULL, NULL, NULL, NULL, NULL)::teams.team);
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT teams.update(ROW(2, 'Updated', NULL, NULL, NULL, NULL, NULL)::teams.team);
+
+Function teams.delete:
+    Description: Deletes a team
+    Input: p_team_id INT
+    Output:
+    Permissions: support_admin or administrator in the same tenant
+    Logic:
+        1. check user role support_admin or administrator in the same tenant, if not raise exception 'permission denied'
+        2. delete team
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT teams.delete(1);
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT teams.delete(2);
+
+Function cabinets.create:
+    Description: Creates a cabinet
+    Input: p_cabinet cabinets.cabinet
+    Output: cabinets.cabinet
+    Permissions: Only support_admin
+    Logic:
+        1. check user role support_admin, if not raise exception 'permission denied'
+        2. insert new cabinet
+        3. return the cabinet
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT cabinets.create(ROW(NULL, 'Cabinet Name', 'Location', 'Description', 1, NULL, NULL, NULL, NULL)::cabinets.cabinet);
+
+Function cabinets.get_one:
+    Description: Gets one cabinet
+    Input: p_cabinet_id INT
+    Output: cabinets.cabinet
+    Permissions: support_view or support_admin or administrator in the same tenant
+    Logic:
+        1. check user role support_admin, support_view or administrator in the same tenant, if not raise exception 'permission denied'
+        2. select cabinet into new variable
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT cabinets.get_one(1);
+
+    SET myapp.session.user_role = 'support_view';
+    SELECT cabinets.get_one(1);
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT cabinets.get_one(2);
+
+Function cabinets.get_all:
+    Description: Gets all cabinets
+    Input:
+    Output: cabinets.cabinet
+    Permissions: support_view or support_admin or administrator in the same tenant
+    Logic:
+        1. check user role support_admin, support_view or administrator in the same tenant, if not raise exception 'permission denied'
+        2. return cabinets according to role
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT cabinets.get_all();
+
+    SET myapp.session.user_role = 'support_view';
+    SELECT cabinets.get_all();
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT cabinets.get_all();
+
+Function cabinets.update:
+    Description: Updates a cabinet
+    Input: p_cabinet cabinets.cabinet
+    Output: cabinets.cabinet
+    Permissions: Only support_admin
+    Logic:
+        1. check user role support_admin, if not raise exception 'permission denied'
+        2. update cabinet
+        3. return updated cabinet
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT cabinets.update(ROW(1, 'Updated', 'Updated', 'Updated', NULL, NULL, NULL, NULL, NULL)::cabinets.cabinet);
+
+
+Function cabinets.delete:
+    Description: Deletes a cabinet
+    Input: p_cabinet_id INT
+    Output:
+    Permissions: Only support_admin
+    Logic:
+        1. check user role support_admin, if not raise exception 'permission denied'
+        2. delete cabinet
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT cabinets.delete(1);
+
+Function add_cabinet_to_team:
+    Description: Adds cabinet to team
+    Input: p_cabinet team_cabinet
+    Output: team_cabinet
+    Permissions: support_admin or administrator in the same tenant as the user
+    Logic:
+        1. check user role support_admin or administrator in the same tenant, if not raise exception 'permission denied'
+        2. insert new team_cabinet
+        3. return new_team_cabinet
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT add_cabinet_to_team(ROW(1, 1, NULL, 1, NULL, NULL)::team_cabinet);
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT add_cabinet_to_team(ROW(2, 2, NULL, 2, NULL, NULL)::team_cabinet);
+
+Function remove_cabinet_from_team:
+    Description: Removes cabinet from team
+    Input: p_cabinet_id INT, p_team_id INT
+    Output:
+    Permissions: support_admin or administrator in the same tenant as the user
+    Logic:
+        1. check user role support_admin or administrator in the same tenant, if not raise exception 'permission denied'
+        2. delete team cabinet
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT remove_cabinet_from_team(1);
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT remove_cabinet_from_team(2);
+
+Function device_profiles.create:
+    Description: Creates a device profile
+    Input: p_device_profile device_profiles.device_profile
+    Output: device_profiles.device_profile
+    Permissions: support_admin or administrator in the same tenant as the user
+    Logic:
+        1. check user role support_admin or administrator in the same tenant, if not raise exception 'permission denied'
+        2. insert new device_profile
+        3. return the device_profile
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT device_profiles.create(ROW(NULL, 'Device Profile Name', 'Description', 1, NULL, NULL, NULL, NULL)::device_profiles.device_profile);
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT device_profiles.create(ROW(NULL, 'Device Profile Name', 'Description', 2, NULL, NULL, NULL, NULL)::device_profiles.device_profile);
+
+Function device_profiles.get_one:
+    Description: Gets one device profile
+    Input: p_device_profile_id INT
+    Output: device_profiles.device_profile
+    Permissions: support_view or support_admin or administrator in the same tenant
+    Logic:
+        1. check user role support_admin, support_view or administrator in the same tenant, if not raise exception 'permission denied'
+        2. select device_profile into new variable
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT device_profiles.get_one(1);
+
+    SET myapp.session.user_role = 'support_view';
+    SELECT device_profiles.get_one(1);
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT device_profiles.get_one(2);
+
+Function device_profiles.get_all:
+    Description: Gets all device profiles
+    Input: 
+    Output: device_profiles.device_profile
+    Permissions: support_view or support_admin or administrator in the same tenant
+    Logic:
+        1. check user role support_admin, support_view or administrator in the same tenant, if not raise exception 'permission denied'
+        2. select device_profiles according to role
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT device_profiles.get_all();
+
+    SET myapp.session.user_role = 'support_view';
+    SELECT device_profiles.get_all();
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT device_profiles.get_all();
+
+Function device_profiles.update:
+    Description: Updates a device profile
+    Input: p_device_profile device_profiles.device_profile
+    Output: device_profiles.device_profile
+    Permissions: support_admin or administrator in the same tenant as the user
+    Logic:
+        1. check user role support_admin or administrator in the same tenant, if not raise exception 'permission denied'
+        2. update device_profile
+        3. return updated device_profile
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT device_profiles.update(ROW(1, 'Updated', 'Updated', NULL, NULL, NULL, NULL, NULL)::device_profiles.device_profile);
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT device_profiles.update(ROW(2, 'Updated', 'Updated', NULL, NULL, NULL, NULL, NULL)::device_profiles.device_profile);
+
+Function device_profiles.delete:
+    Description: Deletes a device profile
+    Input: p_device_profile_id INT
+    Output:
+    Permissions: support_admin or administrator in the same tenant as the user
+    Logic:
+        1. check user role support_admin or administrator in the same tenant, if not raise exception 'permission denied'
+        2. delete device_profile
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT device_profiles.delete(1);
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT device_profiles.delete(2);
+
+Function devices.create:
+    Description: Creates a device
+    Input: p_device devices.device
+    Output: devices.device
+    Permissions: support_admin or administrator in the same tenant as the user
+    Logic:
+        1. check user role support_admin or administrator in the same tenant, if not raise exception 'permission denied'
+        2. insert new device
+        3. return the device
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT devices.create(ROW(NULL, 'Device Name', 'Description', 1, 'NX123456', NULL, NULL, 1, 1, 1, NULL, NULL, NULL, NULL)::devices.device);
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT devices.create(ROW(NULL, 'Device Name', 'Description', 1, 'NX123456', NULL, NULL, 2, 2, 2, NULL, NULL, NULL, NULL)::devices.device);
+
+Function devices.get_one:
+    Description: Gets one device
+    Input: p_device_id INT
+    Output: devices.device
+    Permissions: support_view or support_admin or administrator in the same tenant
+    Logic:
+        1. check user role support_admin, support_view or administrator in the same tenant, if not raise exception 'permission denied'
+        2. select device into new variable
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT devices.get_one(1);
+
+    SET myapp.session.user_role = 'support_view';
+    SELECT devices.get_one(1);
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT devices.get_one(2);
+
+Function devices.get_all:
+    Description: Gets all devices
+    Input:
+        1. check user role support_admin, support_view or administrator in the same tenant, if not raise exception 'permission denied'
+        2. select device according to role
+    Output: devices.device
+    Permissions: support_view or support_admin or administrator in the same tenant
+    Logic:
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT devices.get_all();
+
+    SET myapp.session.user_role = 'support_view';
+    SELECT devices.get_all();
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT devices.get_all();
+
+Function devices.update:
+    Description: Updates a device
+    Input: p_device devices.device
+    Output: devices.device
+    Permissions: support_admin or administrator in the same tenant as the user
+    Logic:
+        1. check user role support_admin or administrator in the same tenant, if not raise exception 'permission denied'
+        2. update device
+        3. return updated device
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT devices.update(ROW(1, 'Updated', 'Updated', 1, 'NX123456', NULL, NULL, 1, 1, 1, NULL, NULL, NULL, NULL)::devices.device);
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT devices.update(ROW(2, 'Updated', 'Updated', 1, 'NX123456', NULL, NULL, 2, 2, 2, NULL, NULL, NULL, NULL)::devices.device);
+
+Function devices.delete:
+    Description: Deletes a device
+    Input: p_device_id INT
+    Output:
+    Permissions: support_admin or administrator in the same tenant as the user
+    Logic:
+        1. check user role support_admin or administrator in the same tenant, if not raise exception 'permission denied'
+        2. delete device
+    Unit Tests:
+    SET myapp.session.user_role = 'support_admin';
+    SELECT devices.delete(1);
+
+    SET myapp.session.tenant_id = 2;
+    SET myapp.session.user_role = 'administrator';
+    SELECT devices.delete(2);
