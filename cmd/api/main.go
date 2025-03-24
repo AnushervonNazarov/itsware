@@ -28,9 +28,7 @@ func main() {
 	db.InitDB()
 
 	mainServer := new(server.Server)
-	go func() {
-		if err := mainServer.Run(configs.AppSettings.AppParams.PortRun, router.RunRoutes()); err != nil {
-			log.Fatalf("Error starting HTTP server: %s", err)
-		}
-	}()
+	if err := mainServer.Run(configs.AppSettings.AppParams.PortRun, router.RunRoutes()); err != nil {
+		log.Fatalf("Error starting HTTP server: %s", err)
+	}
 }

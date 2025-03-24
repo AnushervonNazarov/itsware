@@ -90,7 +90,5 @@ func RunRoutes() *gin.Engine {
 		DeviceG.DELETE("/:id", controllers.DeleteDevice)
 	}
 
-	r.Run(":8080")
-
 	return r
 }
