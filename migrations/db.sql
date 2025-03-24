@@ -571,24 +571,28 @@ $$ LANGUAGE plpgsql;
 
 -- Add User to Team
 
-CREATE OR REPLACE FUNCTION add_user_to_team(input team_user)
+CREATE OR REPLACE FUNCTION add_user_to_team(p_user team_user)
 RETURNS team_user AS $$
 DECLARE 
     new_team_users team_user;
     s_tenant_id INT;
+    s_user_id INT;
     s_user_role TEXT;
     user_tenant_id INT;
+    team_tenant_id INT;
 BEGIN
+    s_user_id := current_setting('myapp.session.user_id', TRUE)::INT;
     s_tenant_id := current_setting('myapp.session.tenant_id', TRUE)::INT;
     s_user_role := current_setting('myapp.session.user_role', TRUE);
     
-    SELECT tenant_id INTO user_tenant_id FROM users WHERE id = input.user_id;
+    SELECT tenant_id INTO user_tenant_id FROM users WHERE id = p_user.user_id;
+    SELECT tenant_id INTO team_tenant_id FROM teams WHERE id = p_user.user_id;
 
-    IF s_user_role = 'support_admin' OR (s_user_role = 'administrator' AND user_tenant_id = s_tenant_id) THEN
-    INSERT INTO team_users (team_id, user_id, created_on, created_by, last_modified_on, last_modified_by)
-    VALUES (input.team_id, input.user_id, NOW(), input.created_by, NOW(), input.last_modified_by)
+    IF s_user_role = 'support_admin' OR (s_user_role = 'administrator' AND user_tenant_id = s_tenant_id AND team_tenant_id = s_tenant_id) THEN
+    INSERT INTO team_users (user_id, team_id, created_on, created_by)
+    VALUES (p_user.user_id, p_user.team_id, NOW(), s_user_id)
     ON CONFLICT DO NOTHING
-    RETURNING team_id, user_id, created_on, created_by, last_modified_on, last_modified_by
+    RETURNING user_id, team_id, created_on, created_by, last_modified_on, last_modified_by
     INTO new_team_users;
 
     ELSE
@@ -611,7 +615,7 @@ BEGIN
     s_tenant_id := current_setting('myapp.session.tenant_id', TRUE)::INT;
     s_user_role := current_setting('myapp.session.user_role', TRUE);
 
-    SELECT tenant_id INTO user_tenant_id FROM users WHERE id = p_user_id;
+    SELECT tenant_id INTO user_tenant_id FROM users WHERE id = s_tenant_id;
 
     IF s_user_role = 'support_admin' OR (s_user_role = 'administrator' AND user_tenant_id = s_tenant_id) THEN
     DELETE FROM team_users WHERE team_users.team_id = p_team_id AND team_users.user_id = p_user_id;
@@ -902,20 +906,23 @@ DECLARE
     new_team_cabinet team_cabinet;
     s_tenant_id INT;
     s_user_role TEXT;
-    user_tenant_id INT;
+    s_user_id INT;
+    cabinet_tenant_id INT;
+    team_tenant_id INT;
 BEGIN
+    s_user_id := current_setting('myapp.session.user_id', TRUE)::INT;
     s_tenant_id := current_setting('myapp.session.tenant_id', TRUE)::INT;
     s_user_role := current_setting('myapp.session.user_role', TRUE);
     
-    SELECT tenant_id INTO user_tenant_id FROM users WHERE id = input.user_id;
+    SELECT tenant_id INTO cabinet_tenant_id FROM cabinets WHERE id = s_tenant_id;
+    SELECT tenant_id INTO team_tenant_id FROM teams WHERE id = s_tenant_id;
 
-    IF s_user_role = 'support_admin' OR (s_user_role = 'administrator' AND user_tenant_id = s_tenant_id) THEN
-    INSERT INTO team_cabinets (team_id, cabinet_id, created_on, created_by, last_modified_on, last_modified_by)
-    VALUES (p_cabinet.team_id, p_cabinet.cabinet_id, NOW(), p_cabinet.created_by, p_cabinet.last_modified_on, p_cabinet.last_modified_by)
-    ON CONFLICT DO NOTHING
-    RETURNING team_id, cabinet_id, created_on, created_by, last_modified_on, last_modified_by
-    INTO new_team_cabinet;
-
+    IF s_user_role = 'support_admin' OR (s_user_role = 'administrator' AND cabinet_tenant_id = s_tenant_id AND team_tenant_id = s_tenant_id) THEN
+        INSERT INTO team_cabinets (cabinet_id, team_id, created_on, created_by)
+        VALUES (p_cabinet.cabinet_id, p_cabinet.team_id, NOW(), s_user_id)
+        ON CONFLICT DO NOTHING
+        RETURNING cabinet_id, team_id, created_on, created_by, last_modified_on, last_modified_by
+        INTO new_team_cabinet;
     ELSE
         PERFORM permission_denied();
     END IF;
@@ -931,15 +938,15 @@ RETURNS VOID AS $$
 DECLARE
     s_tenant_id INT;
     s_user_role TEXT;
-    user_tenant_id INT;
+    cabinet_tenant_id INT;
 BEGIN
     s_tenant_id := current_setting('myapp.session.tenant_id', TRUE)::INT;
     s_user_role := current_setting('myapp.session.user_role', TRUE);
 
-    SELECT tenant_id INTO user_tenant_id FROM users WHERE id = p_user_id;
+    SELECT tenant_id INTO cabinet_tenant_id FROM cabinets WHERE id = s_tenant_id;
 
-    IF s_user_role = 'support_admin' OR (s_user_role = 'administrator' AND user_tenant_id = s_tenant_id) THEN
-    DELETE FROM team_cabinets WHERE team_cabinets.team_id = p_team_id AND team_cabinets.cabinet_id = p_cabinet_id;
+    IF s_user_role = 'support_admin' OR (s_user_role = 'administrator' AND cabinet_tenant_id = s_tenant_id) THEN
+    DELETE FROM team_cabinets WHERE team_cabinets.cabinet_id = p_cabinet_id AND team_cabinets.team_id = p_team_id;
     
     IF NOT FOUND THEN
         RAISE EXCEPTION 'record does not exist';
@@ -951,6 +958,8 @@ BEGIN
 
 END;
 $$ LANGUAGE plpgsql;
+
+SELECT remove_cabinet_from_team(1,2);
 
 CREATE OR REPLACE FUNCTION cabinet_user_access_add(input cabinet_user_access)
 RETURNS cabinet_user_access AS $$

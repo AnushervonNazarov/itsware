@@ -7,7 +7,7 @@ import (
 )
 
 type Device struct {
-	ID              int                `json:"id" validate:"required,uuid4"`
+	ID              int                `json:"id,omitempty" validate:"omitempty,uuid4"`
 	Name            string             `json:"name" validate:"required,min=2,max=50"`
 	Description     string             `json:"description" validate:"required"`
 	DeviceStatusID  int                `json:"device_status_id" validate:"required"`
@@ -21,4 +21,14 @@ type Device struct {
 	CreatedBy       pgtype.Int4        `json:"created_by"`
 	LastModifiedOn  pgtype.Timestamptz `json:"last_modified_on"`
 	LastModifiedBy  pgtype.Int4        `json:"last_modified_by"`
+}
+
+type UpdateDevice struct {
+	ID              int    `json:"id,omitempty" validate:"omitempty"`
+	Name            string `json:"name" validate:"required,min=2,max=50"`
+	Description     string `json:"description" validate:"required"`
+	DeviceStatusID  int    `json:"device_status_id" validate:"required"`
+	SerialNumber    string `json:"serial_number" validate:"required"`
+	CabinetID       int    `json:"cabinet_id" validate:"required"`
+	DeviceProfileID int    `json:"device_profile_id" validate:"required"`
 }

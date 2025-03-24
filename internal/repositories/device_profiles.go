@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"itsware/internal/constants"
 	"itsware/internal/models"
+	"itsware/logger"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -24,6 +25,7 @@ func CreateDeviceProfile(ctx context.Context, deviceProfile models.DeviceProfile
 		deviceProfile.CreatedBy,
 	)
 	if err != nil {
+		logger.Error.Printf("[repositories.CreateDeviceProfile] error creating device profile %v\n", err)
 		return fmt.Errorf("failed to create device profile: %w", err)
 	}
 	return nil
@@ -43,6 +45,7 @@ func GetDeviceProfile(ctx context.Context, id int) (*models.DeviceProfile, error
 		&deviceProfile.CreatedOn, &deviceProfile.CreatedBy, &deviceProfile.LastModifiedOn, &deviceProfile.LastModifiedBy,
 	)
 	if err != nil {
+		logger.Error.Printf("[repositories.GetDeviceProfile] error getting device profile %v\n", err)
 		return &models.DeviceProfile{}, err
 	}
 	return &deviceProfile, nil
@@ -57,6 +60,7 @@ func GetAllDeviceProfiles(ctx context.Context) ([]models.DeviceProfile, error) {
 	query := `SELECT * FROM device_profiles.get_all()`
 	rows, err := conn.Query(ctx, query)
 	if err != nil {
+		logger.Error.Printf("[repositories.GetAllDeviceProfiles] error getting all device profiles %v\n", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -68,6 +72,7 @@ func GetAllDeviceProfiles(ctx context.Context) ([]models.DeviceProfile, error) {
 			&deviceProfile.ID, &deviceProfile.Name, &deviceProfile.Description, &deviceProfile.TenantID,
 			&deviceProfile.CreatedOn, &deviceProfile.CreatedBy,
 			&deviceProfile.LastModifiedOn, &deviceProfile.LastModifiedBy); err != nil {
+			logger.Error.Printf("[repositories.GetAllDeviceProfiles] error getting all device profiles %v\n", err)
 			return nil, err
 		}
 		deviceProfiles = append(deviceProfiles, deviceProfile)
@@ -76,7 +81,7 @@ func GetAllDeviceProfiles(ctx context.Context) ([]models.DeviceProfile, error) {
 	return deviceProfiles, nil
 }
 
-func UpdateDeviceProfile(ctx context.Context, deviceProfile models.DeviceProfile) error {
+func UpdateDeviceProfile(ctx context.Context, deviceProfile models.UpdateDeviceProfile) error {
 	conn, ok := ctx.Value(constants.DBConnKey).(*pgxpool.Conn)
 	if !ok {
 		return fmt.Errorf("database connection not found in context")
@@ -89,6 +94,7 @@ func UpdateDeviceProfile(ctx context.Context, deviceProfile models.DeviceProfile
 		deviceProfile.Description,
 	)
 	if err != nil {
+		logger.Error.Printf("[repositories.UpdateDeviceProfile] error updating device profile %v\n", err)
 		return fmt.Errorf("failed to update device profile: %w", err)
 	}
 	return nil
@@ -102,5 +108,9 @@ func DeleteDeviceProfile(ctx context.Context, id int) error {
 
 	query := `SELECT device_profiles.delete($1)`
 	_, err := conn.Exec(ctx, query, id)
-	return err
+	if err != nil {
+		logger.Error.Printf("[repositories.DeleteDeviceProfile] error deleting device profile %v\n", err)
+		return fmt.Errorf("failed to delete device profile: %w", err)
+	}
+	return nil
 }

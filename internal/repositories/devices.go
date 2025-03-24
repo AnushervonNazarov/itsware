@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"itsware/internal/constants"
 	"itsware/internal/models"
+	"itsware/logger"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -28,6 +29,7 @@ func CreateDevice(ctx context.Context, device models.Device) error {
 		device.CreatedBy,
 	)
 	if err != nil {
+		logger.Error.Printf("[repositories.CreateDevice] error creating device %v\n", err)
 		return fmt.Errorf("failed to create device: %w", err)
 	}
 	return nil
@@ -48,6 +50,7 @@ func GetDevice(ctx context.Context, id int) (*models.Device, error) {
 		&device.DeviceProfileID, &device.CreatedOn, &device.CreatedBy, &device.LastModifiedOn, &device.LastModifiedBy,
 	)
 	if err != nil {
+		logger.Error.Printf("[repositories.GetDevice] error getting device %v\n", err)
 		return &models.Device{}, err
 	}
 	return &device, nil
@@ -62,6 +65,7 @@ func GetAllDevices(ctx context.Context) ([]models.Device, error) {
 	query := `SELECT * FROM devices.get_all()`
 	rows, err := conn.Query(ctx, query)
 	if err != nil {
+		logger.Error.Printf("[repositories.GetAllDevices] error getting all devices %v\n", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -74,6 +78,7 @@ func GetAllDevices(ctx context.Context) ([]models.Device, error) {
 			&device.CheckedOutOn, &device.CheckedOutBy, &device.CabinetID, &device.TenantID,
 			&device.DeviceProfileID, &device.CreatedOn, &device.CreatedBy,
 			&device.LastModifiedOn, &device.LastModifiedBy); err != nil {
+			logger.Error.Printf("[repositories.GetAllDevices] error getting all devices %v\n", err)
 			return nil, err
 		}
 		devices = append(devices, device)
@@ -82,7 +87,7 @@ func GetAllDevices(ctx context.Context) ([]models.Device, error) {
 	return devices, nil
 }
 
-func UpdateDevice(ctx context.Context, device models.Device) error {
+func UpdateDevice(ctx context.Context, device models.UpdateDevice) error {
 	conn, ok := ctx.Value(constants.DBConnKey).(*pgxpool.Conn)
 	if !ok {
 		return fmt.Errorf("database connection not found in context")
@@ -99,6 +104,7 @@ func UpdateDevice(ctx context.Context, device models.Device) error {
 		device.DeviceProfileID,
 	)
 	if err != nil {
+		logger.Error.Printf("[repositories.UpdateDevice] error updating device %v\n", err)
 		return fmt.Errorf("failed to update device: %w", err)
 	}
 	return nil
@@ -112,5 +118,9 @@ func DeleteDevice(ctx context.Context, id int) error {
 
 	query := `SELECT devices.delete($1)`
 	_, err := conn.Exec(ctx, query, id)
-	return err
+	if err != nil {
+		logger.Error.Printf("[repositories.DeleteDevice] error deleting device %v\n", err)
+		return fmt.Errorf("failed to delete device: %w", err)
+	}
+	return nil
 }

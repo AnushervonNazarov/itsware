@@ -3,6 +3,8 @@ package controllers
 import (
 	"itsware/internal/models"
 	"itsware/internal/services"
+	"itsware/logger"
+	"itsware/utils"
 	"net/http"
 	"strconv"
 
@@ -12,14 +14,22 @@ import (
 func CreateTeam(ctx *gin.Context) {
 	var team models.Team
 	if err := ctx.BindJSON(&team); err != nil {
+		logger.Error.Printf("[controllers.CreateTeam] error creating team %v\n", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
+	if errors := utils.ValidateStruct(team); errors != nil {
+		logger.Error.Printf("[controllers.CreateTeam] error validate team %v\n", errors)
+		ctx.JSON(http.StatusBadRequest, gin.H{"errors": errors})
+		return
+	}
+
 	if err := services.CreateTeam(ctx.Request.Context(), team); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
+		logger.Error.Printf("[controllers.CreateTeam] error creating team %v\n", err)
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
@@ -31,6 +41,7 @@ func CreateTeam(ctx *gin.Context) {
 func GetTeam(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
+		logger.Error.Printf("[controllers.GetTeam] error: invalid id %v\n", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid id",
 		})
@@ -39,7 +50,8 @@ func GetTeam(ctx *gin.Context) {
 
 	team, err := services.GetTeam(ctx.Request.Context(), id)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
+		logger.Error.Printf("[controllers.GetTeam] error getting team %v\n", err)
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
@@ -51,6 +63,7 @@ func GetTeam(ctx *gin.Context) {
 func GetAllTeams(ctx *gin.Context) {
 	teams, err := services.GetAllTeams(ctx.Request.Context())
 	if err != nil {
+		logger.Error.Printf("[controllers.GetAllTeams] error getting all teams %v\n", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
@@ -61,17 +74,25 @@ func GetAllTeams(ctx *gin.Context) {
 }
 
 func UpdateTeam(ctx *gin.Context) {
-	var input models.Team
+	var input models.UpdateTeam
 	if err := ctx.ShouldBindJSON(&input); err != nil {
+		logger.Error.Printf("[controllers.UpdateTeam] error: invalid input data %v\n", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid input data",
 		})
 		return
 	}
 
+	if errors := utils.ValidateStruct(input); errors != nil {
+		logger.Error.Printf("[controllers.UpdateTeam] error validate team %v\n", errors)
+		ctx.JSON(http.StatusBadRequest, gin.H{"errors": errors})
+		return
+	}
+
 	err := services.UpdateTeam(ctx.Request.Context(), input)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
+		logger.Error.Printf("[controllers.UpdateTeam] error updating team %v\n", err)
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
@@ -85,6 +106,7 @@ func UpdateTeam(ctx *gin.Context) {
 func DeleteTeam(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
+		logger.Error.Printf("[controllers.DeleteTeam] error: invalid id %v\n", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid id",
 		})
@@ -93,7 +115,8 @@ func DeleteTeam(ctx *gin.Context) {
 
 	err = services.DeleteTeam(ctx.Request.Context(), id)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
+		logger.Error.Printf("[controllers.DeleteTeam] error deleting team %v\n", err)
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return

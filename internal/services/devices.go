@@ -18,7 +18,7 @@ func GetAllDevices(ctx context.Context) ([]models.Device, error) {
 	return repositories.GetAllDevices(ctx)
 }
 
-func UpdateDevice(ctx context.Context, device models.Device) error {
+func UpdateDevice(ctx context.Context, device models.UpdateDevice) error {
 	return repositories.UpdateDevice(ctx, device)
 }
 

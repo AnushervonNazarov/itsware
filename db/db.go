@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -22,22 +21,4 @@ func InitDB() {
 	if err != nil {
 		log.Fatalln("b5", err)
 	}
-}
-
-func NewPool(ctx context.Context, connString string) (*pgxpool.Pool, error) {
-	config, err := pgxpool.ParseConfig(connString)
-	if err != nil {
-		return nil, err
-	}
-
-	// Add hook to set session variables for every connection
-	config.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
-		_, err := conn.Exec(ctx, `
-			SET myapp.session.user_id = '';
-			SET myapp.session.tenant_id = '';
-			SET myapp.session.user_role = '';`)
-		return err
-	}
-
-	return pgxpool.NewWithConfig(ctx, config)
 }

@@ -18,7 +18,7 @@ func GetAllDeviceProfiles(ctx context.Context) (deviceProfile []models.DevicePro
 	return repositories.GetAllDeviceProfiles(ctx)
 }
 
-func UpdateDeviceProfile(ctx context.Context, deviceProfile models.DeviceProfile) error {
+func UpdateDeviceProfile(ctx context.Context, deviceProfile models.UpdateDeviceProfile) error {
 	return repositories.UpdateDeviceProfile(ctx, deviceProfile)
 }
 

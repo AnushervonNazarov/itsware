@@ -13,18 +13,18 @@ import (
 type CustomClaims struct {
 	UserID   int    `json:"user_id"`
 	Email    string `json:"email"`
-	Role     string `json:"role"`
 	TenantID int    `json:"tenant_id"`
+	Role     string `json:"role"`
 	jwt.StandardClaims
 }
 
 // GenerateToken generates a JWT token with custom fields
-func GenerateToken(userID int, email, role string, tenantID int) (string, error) {
+func GenerateToken(userID, tenantID int, email, role string) (string, error) {
 	claims := CustomClaims{
 		UserID:   userID,
 		Email:    email,
-		Role:     role,
 		TenantID: tenantID,
+		Role:     role,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Minute * time.Duration(configs.AppSettings.AuthParams.JwtTtlMinutes)).Unix(),
 			Issuer:    configs.AppSettings.AppParams.ServerName,

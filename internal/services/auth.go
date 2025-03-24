@@ -20,7 +20,7 @@ func (s *User) SignIn(email, password string) (string, error) {
 		return "", errors.New("failed to retrieve user role")
 	}
 
-	accessToken, err := GenerateToken(int(user.ID), user.Email, role, int(user.TenantID))
+	accessToken, err := GenerateToken(user.ID, user.TenantID, user.Email, role)
 	if err != nil {
 		return "", errors.New("failed to generate token")
 	}

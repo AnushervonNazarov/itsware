@@ -7,7 +7,7 @@ import (
 )
 
 type User struct {
-	ID             int                `json:"id" validate:"required,uuid4"`
+	ID             int                `json:"id,omitempty" validate:"omitempty,uuid4"`
 	FirstName      string             `json:"first_name" validate:"required,min=2,max=50"`
 	LastName       string             `json:"last_name" validate:"required,min=2,max=50"`
 	Email          string             `json:"email" validate:"required,email"`
@@ -19,4 +19,17 @@ type User struct {
 	CreatedBy      pgtype.Int4        `json:"created_by"`
 	LastModifiedOn pgtype.Timestamptz `json:"last_modified_on"`
 	LastModifiedBy pgtype.Int4        `json:"last_modified_by"`
+}
+
+type UpdateUser struct {
+	ID        int    `json:"id,omitempty" validate:"omitempty"`
+	FirstName string `json:"first_name" validate:"required,min=2,max=50"`
+	LastName  string `json:"last_name" validate:"required,min=2,max=50"`
+	Email     string `json:"email" validate:"required,email"`
+	Phone     string `json:"phone" validate:"required,e164"`
+}
+
+type Login struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
 }

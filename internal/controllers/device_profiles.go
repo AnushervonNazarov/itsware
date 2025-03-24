@@ -3,6 +3,8 @@ package controllers
 import (
 	"itsware/internal/models"
 	"itsware/internal/services"
+	"itsware/logger"
+	"itsware/utils"
 	"net/http"
 	"strconv"
 
@@ -12,14 +14,22 @@ import (
 func CreateDeviceProfile(ctx *gin.Context) {
 	var deviceProfile models.DeviceProfile
 	if err := ctx.BindJSON(&deviceProfile); err != nil {
+		logger.Error.Printf("[controllers.CreateDeviceProfile] error creating device profile %v\n", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
+	if errors := utils.ValidateStruct(deviceProfile); errors != nil {
+		logger.Error.Printf("[controllers.CreateDeviceProfile] error validate device profile %v\n", errors)
+		ctx.JSON(http.StatusBadRequest, gin.H{"errors": errors})
+		return
+	}
+
 	if err := services.CreateDeviceProfile(ctx.Request.Context(), deviceProfile); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
+		logger.Error.Printf("[controllers.CreateDeviceProfile] error creating device profile %v\n", err)
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
@@ -31,6 +41,7 @@ func CreateDeviceProfile(ctx *gin.Context) {
 func GetDeviceProfile(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
+		logger.Error.Printf("[controllers.GetDeviceProfile] error getting id %v\n", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid id",
 		})
@@ -39,7 +50,8 @@ func GetDeviceProfile(ctx *gin.Context) {
 
 	deviceProfile, err := services.GetDeviceProfile(ctx.Request.Context(), id)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
+		logger.Error.Printf("[controllers.GetDeviceProfile] error getting device profile %v\n", err)
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
@@ -51,6 +63,7 @@ func GetDeviceProfile(ctx *gin.Context) {
 func GetAllDeviceProfiles(ctx *gin.Context) {
 	deviceProfiles, err := services.GetAllDeviceProfiles(ctx.Request.Context())
 	if err != nil {
+		logger.Error.Printf("[controllers.GetAllDeviceProfiles] error getting all device profiles %v\n", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
@@ -61,17 +74,25 @@ func GetAllDeviceProfiles(ctx *gin.Context) {
 }
 
 func UpdateDeviceProfile(ctx *gin.Context) {
-	var input models.DeviceProfile
+	var input models.UpdateDeviceProfile
 	if err := ctx.ShouldBindJSON(&input); err != nil {
+		logger.Error.Printf("[controllers.UpdateDeviceProfile] error: invalid input data %v\n", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid input data",
 		})
 		return
 	}
 
+	if errors := utils.ValidateStruct(input); errors != nil {
+		logger.Error.Printf("[controllers.UpdateDeviceProfile] error validate device profile %v\n", errors)
+		ctx.JSON(http.StatusBadRequest, gin.H{"errors": errors})
+		return
+	}
+
 	err := services.UpdateDeviceProfile(ctx.Request.Context(), input)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
+		logger.Error.Printf("[controllers.UpdateDeviceProfile] error updating device profile %v\n", err)
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return
@@ -85,6 +106,7 @@ func UpdateDeviceProfile(ctx *gin.Context) {
 func DeleteDeviceProfile(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
+		logger.Error.Printf("[controllers.DeleteDeviceProfile] error: invalid id %v\n", err)
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid id",
 		})
@@ -93,7 +115,8 @@ func DeleteDeviceProfile(ctx *gin.Context) {
 
 	err = services.DeleteDeviceProfile(ctx.Request.Context(), id)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
+		logger.Error.Printf("[controllers.DeleteDeviceProfile] error: deleting device profile %v\n", err)
+		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
 		return

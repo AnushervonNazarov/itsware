@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"itsware/internal/constants"
 	"itsware/internal/models"
+	"itsware/logger"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -32,6 +33,7 @@ func CreateUser(ctx context.Context, user models.User) error {
 		user.CreatedBy,
 	)
 	if err != nil {
+		logger.Error.Printf("[repositories.CreateUser] error creating user %v\n", err)
 		return fmt.Errorf("failed to create user: %w", err)
 	}
 	return nil
@@ -52,6 +54,7 @@ func GetUser(ctx context.Context, id int) (*models.User, error) {
 		&user.LastModifiedOn, &user.LastModifiedBy,
 	)
 	if err != nil {
+		logger.Error.Printf("[repositories.GetUser] error getting user %v\n", err)
 		return &models.User{}, err
 	}
 	return &user, nil
@@ -66,6 +69,7 @@ func GetAllUsers(ctx context.Context) ([]models.User, error) {
 	query := `SELECT * FROM users.get_all()`
 	rows, err := conn.Query(ctx, query)
 	if err != nil {
+		logger.Error.Printf("[repositories.GetAllUsers] error getting all users %v\n", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -77,6 +81,7 @@ func GetAllUsers(ctx context.Context) ([]models.User, error) {
 			&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.Phone,
 			&user.Password, &user.RoleID, &user.TenantID, &user.CreatedOn, &user.CreatedBy,
 			&user.LastModifiedOn, &user.LastModifiedBy); err != nil {
+			logger.Error.Printf("[repositories.GetAllUsers] error getting all users %v\n", err)
 			return nil, err
 		}
 		users = append(users, user)
@@ -85,7 +90,7 @@ func GetAllUsers(ctx context.Context) ([]models.User, error) {
 	return users, nil
 }
 
-func UpdateUser(ctx context.Context, user models.User) error {
+func UpdateUser(ctx context.Context, user models.UpdateUser) error {
 	conn, ok := ctx.Value(constants.DBConnKey).(*pgxpool.Conn)
 	if !ok {
 		return fmt.Errorf("database connection not found in context")
@@ -100,6 +105,7 @@ func UpdateUser(ctx context.Context, user models.User) error {
 		user.Phone,
 	)
 	if err != nil {
+		logger.Error.Printf("[repositories.UpdateUser] error updating user %v\n", err)
 		return fmt.Errorf("failed to update user: %w", err)
 	}
 	return nil
@@ -113,7 +119,46 @@ func DeleteUser(ctx context.Context, id int) error {
 
 	query := `SELECT users.delete($1)`
 	_, err := conn.Exec(ctx, query, id)
-	return err
+	if err != nil {
+		logger.Error.Printf("[repositories.DeleteUser] error deleting user %v\n", err)
+		return fmt.Errorf("failed to delete user: %w", err)
+	}
+	return nil
+}
+
+func AddUserToTeam(ctx context.Context, teamUser models.TeamUser) error {
+	conn, ok := ctx.Value(constants.DBConnKey).(*pgxpool.Conn)
+	if !ok {
+		return fmt.Errorf("database connection not found in context")
+	}
+
+	query := `SELECT add_user_to_team(ROW($1::int, $2::int, $3::timestamp, $4::int, NULL::timestamp, NULL::int)::team_user)`
+	_, err := conn.Exec(ctx, query,
+		teamUser.UserID,
+		teamUser.TeamID,
+		teamUser.CreatedOn,
+		teamUser.CreatedBy,
+	)
+	if err != nil {
+		logger.Error.Printf("[repositories.AddUserToTeam] error adding user to team %v\n", err)
+		return fmt.Errorf("failed to add user to team: %w", err)
+	}
+	return nil
+}
+
+func RemoveUserFromTeam(ctx context.Context, user_id int, team_id int) error {
+	conn, ok := ctx.Value(constants.DBConnKey).(*pgxpool.Conn)
+	if !ok {
+		return fmt.Errorf("database connection not found in context")
+	}
+
+	query := `SELECT remove_user_from_team($1, $2)`
+	_, err := conn.Exec(ctx, query, user_id, team_id)
+	if err != nil {
+		logger.Error.Printf("[repositories.RemoveUserFromTeam] error removing user from team %v\n", err)
+		return fmt.Errorf("failed to add user to team: %w", err)
+	}
+	return nil
 }
 
 func (r *User) GetUserByEmailAndPassword(email, password string) (models.User, error) {

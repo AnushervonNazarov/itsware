@@ -18,7 +18,7 @@ func GetAllTenants(ctx context.Context) ([]models.Tenant, error) {
 	return repositories.GetAllTenants(ctx)
 }
 
-func UpdateTenant(ctx context.Context, tenant models.Tenant) error {
+func UpdateTenant(ctx context.Context, tenant models.UpdateTenant) error {
 	return repositories.UpdateTenant(ctx, tenant)
 }
 

@@ -18,7 +18,7 @@ func GetAllTeams(ctx context.Context) (team []models.Team, err error) {
 	return repositories.GetAllTeams(ctx)
 }
 
-func UpdateTeam(ctx context.Context, team models.Team) error {
+func UpdateTeam(ctx context.Context, team models.UpdateTeam) error {
 	return repositories.UpdateTeam(ctx, team)
 }
 

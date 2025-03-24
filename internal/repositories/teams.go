@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"itsware/internal/constants"
 	"itsware/internal/models"
+	"itsware/logger"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -23,6 +24,7 @@ func CreateTeam(ctx context.Context, team models.Team) error {
 		team.CreatedBy,
 	)
 	if err != nil {
+		logger.Error.Printf("[repositories.CreateTeam] error creating team %v\n", err)
 		return fmt.Errorf("failed to create team: %w", err)
 	}
 	return nil
@@ -42,6 +44,7 @@ func GetTeam(ctx context.Context, id int) (*models.Team, error) {
 		&team.LastModifiedOn, &team.LastModifiedBy,
 	)
 	if err != nil {
+		logger.Error.Printf("[repositories.GetTeam] error getting team %v\n", err)
 		return &models.Team{}, err
 	}
 	return &team, err
@@ -56,6 +59,7 @@ func GetAllTeams(ctx context.Context) ([]models.Team, error) {
 	query := `SELECT * FROM teams.get_all()`
 	rows, err := conn.Query(ctx, query)
 	if err != nil {
+		logger.Error.Printf("[repositories.GetAllTeams] error getting all teams %v\n", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -66,6 +70,7 @@ func GetAllTeams(ctx context.Context) ([]models.Team, error) {
 		if err := rows.Scan(
 			&team.ID, &team.Name, &team.TenantID, &team.CreatedOn, &team.CreatedBy,
 			&team.LastModifiedOn, &team.LastModifiedBy); err != nil {
+			logger.Error.Printf("[repositories.GetAllTeams] error getting all teams %v\n", err)
 			return nil, err
 		}
 		teams = append(teams, team)
@@ -74,7 +79,7 @@ func GetAllTeams(ctx context.Context) ([]models.Team, error) {
 	return teams, nil
 }
 
-func UpdateTeam(ctx context.Context, team models.Team) error {
+func UpdateTeam(ctx context.Context, team models.UpdateTeam) error {
 	conn, ok := ctx.Value(constants.DBConnKey).(*pgxpool.Conn)
 	if !ok {
 		return fmt.Errorf("database connection not found in context")
@@ -86,6 +91,7 @@ func UpdateTeam(ctx context.Context, team models.Team) error {
 		team.Name,
 	)
 	if err != nil {
+		logger.Error.Printf("[repositories.UpdateTeam] error updating team %v\n", err)
 		return fmt.Errorf("failed to update team: %w", err)
 	}
 	return nil
@@ -99,5 +105,9 @@ func DeleteTeam(ctx context.Context, id int) error {
 
 	query := `SELECT teams.delete($1)`
 	_, err := conn.Exec(ctx, query, id)
-	return err
+	if err != nil {
+		logger.Error.Printf("[repositories.DeleteTeam] error deleting team %v\n", err)
+		return fmt.Errorf("failed to delete team: %w", err)
+	}
+	return nil
 }
