@@ -165,13 +165,13 @@ func (r *User) GetUserByEmailAndPassword(email, password string) (models.User, e
 	var user models.User
 	var role models.Role
 
-	query := `SELECT u.id, u.email, u.password, u.role_id, r.name
+	query := `SELECT u.id, u.email, u.password, u.role_id, u.tenant_id, r.name
               FROM users u
               JOIN roles r ON u.role_id = r.id
               WHERE u.email = $1 AND u.password = $2`
 
 	err := r.DB.QueryRow(context.Background(), query, email, password).Scan(
-		&user.ID, &user.Email, &user.Password, &user.RoleID, &role.Name,
+		&user.ID, &user.Email, &user.Password, &user.RoleID, &user.TenantID, &role.Name,
 	)
 	if err != nil {
 		return models.User{}, err
